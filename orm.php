@@ -3,7 +3,7 @@
  * File       : orm.php
  * Time       : 14-8-18 下午8:43
  * Author     : star
- * Description: 
+ * Description: __call 调用类内部不存在的类方法，__callStatic 在静态内部调用不存在的方法。
  */
 abstract class ActiveRecord{
     protected static $table;
@@ -57,4 +57,3 @@ class Sales extends ActiveRecord{
 }
 
 assert("select * from custdb where id = 123" == Customer::findById(123)->select);
-var_dump(Customer::findByLastname('Denoncourt')->select);
