@@ -1,0 +1,312 @@
+set nocompatible
+set nobackup
+set noswapfile
+color desert
+set backspace=indent,eol,start
+"存储的历史命令数量
+set history=200
+set listchars=tab:>-
+
+"vim使用<c-p>、<c-n>组合键来反向或下身遍历命令历史，但是他们不会像<up>和<down>那样对历史命令进行过滤，可以自行映射
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+
+cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/':'%%'
+noremap <Up> <Nop>
+noremap <Down> <Nop>
+noremap <Left> <Nop>
+noremap <Right> <Nop>
+
+set hlsearch
+
+" 编码设置
+set encoding=utf-8 "设置gvim内部编码，默认不修改
+set fileencoding=utf-8 "设置当前文件编码，可以更改
+set fileencodings=utf-8,ucs-bom,gbk,cp936,latin1 "设置支持打开的文件编码
+set termencoding=utf-8
+language messages zh_CN.utf-8 
+
+set fileformat=unix "设置当前文件的<EOL>格式
+set fileformats=unix,dos,mac 
+
+" 重绘屏幕的同时也清除高亮的查找
+nnoremap <silent> <C-l> :<C-u>nohlsearch<CR><C-l>
+
+" 在输入查找时即高亮显示第一个匹配
+set incsearch
+
+xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<CR><CR>
+xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<CR><CR>
+
+function! s:VSetSearch()
+    let temp = @s
+    norm! gv"sy
+    let @/ = '\V' . substitute(escape(@s,'/\'),'\n','\\n','g')
+    let @s = temp
+endfunction
+
+" ctags设置
+set autochdir
+" 当前项目设置
+set tags=\web\dn\tags,\web\dm\tags
+
+" nnoremap <F5> :!ctags -R<CR>
+
+" autocmd BufWritePost * call system("ctags -R")
+autocmd FileType php set omnifunc=phpcomplete#CompletePHP
+
+" 判断操作系统
+
+let g:isWindows = 0
+let g:isGui = 0
+if (has("win32") || has("win64"))
+    let g:isWindows = 1
+endif
+
+" 操作程序是终端还是gvim
+if has("gui_running")
+    let g:isGui = 1
+endif
+
+" windows配置的鼠标行为
+if (g:isWindows && g:isGui)
+    behave mswin
+endif
+if has("syntax")
+    syntax on
+endif
+" linux配置
+if !g:isWindows
+" 打开文件至上一次编辑的位置
+    if has("autocmd")
+        au BufReadPost * if line("'\"") > 1 && line("'\"") < line("$") | exe "normal!
+    endif
+
+" linux下的gvim
+    if g:isGui
+        if(filereadable("/etc/vim/gvimrc"))
+            source /etc/vim/gvimrc
+        endif
+    else
+        
+        if(filereadable("/etc/vim/vimrc"))
+            source /etc/vim/vimrc
+        endif
+    endif
+endif
+
+" 插件管理
+set rtp+=C:\Users\Administrator\vimfiles\bundle\vundle
+
+" Vundle必须配置
+filetype off
+call vundle#rc()
+" 使用Vundle来管理插件
+Bundle 'gmarik/vundle'
+" 括号等自动完成
+Plugin 'bling/vim-airline'
+" Plugin 'Yggdroot/indentLine'
+Plugin 'tpope/vim-fugitive'
+Bundle 'jiangmiao/auto-pairs'
+Bundle 'bufexplorer.zip'
+Bundle 'scrooloose/nerdcommenter'
+Bundle 'scrooloose/nerdtree'
+" Bundle 'Lokaltog/vim-powerline' "字体支持不好
+Bundle 'msanders/snipmate.vim'
+Bundle 'taglist.vim'
+Bundle 'TxtBrowser'
+
+filetype plugin indent on
+
+" 文件配置
+filetype on "启用文件类型侦测
+filetype plugin on "针对不同的文件类型加载对应的插件
+filetype plugin indent on "为特定的文件类型载入缩进文件，默认为runtimepath的inent.vom文件
+set smartindent "启用智能对齐方式
+set expandtab "将tab转换为空格
+set tabstop=4 "设置一个新tab为4个空格宽度
+set shiftwidth=4 "换行时自动缩进的宽度
+set softtabstop=4 "设置文件的tab符的空格宽度
+set smarttab "指定按一次backspace就删除shiftwidth的空格
+set foldenable "启动折叠
+set foldmethod=indent "indent折叠方式
+set foldlevel=99
+"set foldmethod=marker "或者marker 折叠方式
+
+" 常规模式下用空格键来开关光标行所在折叠(zR展开所有折叠，zM关闭所有折叠)
+nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc' : 'zo')<CR>
+
+" 当前文件被修改后自动更新文件内容
+set autoread
+
+" 清除行尾空格
+" nmap cS :%s/\s\+$//g<CR>:noh<CR>
+" 清除行尾^M符号
+" nmap cM :%s/\r$//g<CR>:noh<CR>
+
+" 界面
+set nu
+set laststatus=2 "启用状态栏信息
+set cmdheight=2 "命令行高度为2，默认为1
+set cursorline "突出显示当前行
+set guifont=Monaco:h12 "设置字体：字号，空格用下划线代替
+"set guifontwide=幼圆:h12.5
+"set guifont=Bitstream_Vera_Sans_Mono:h12:cANSI
+"set gfw=幼圆:h14:cGB2312
+" set nowrap "设置不自动换行
+set shortmess=atI "去掉欢迎界面
+colorscheme desert "配色方案
+
+" -----------------------------------------------------------------------------
+"  < indentLine 插件配置 >
+" -----------------------------------------------------------------------------
+" 用于显示对齐线，与 indent_guides 在显示方式上不同，根据自己喜好选择了
+" 在终端上会有屏幕刷新的问题，这个问题能解决有更好了
+" 开启/关闭对齐线
+"nmap <leader>il :IndentLinesToggle<CR>
+
+" 设置Gvim的对齐线样式
+"let g:indentLine_char = '┆'
+" let g:indentLine_first_char = '┆'
+ "let g:indent_guides_guide_size=1
+" 设置终端对齐线颜色，如果不喜欢可以将其注释掉采用默认颜色
+"let g:indentLine_color_term = 239
+ 
+" 设置 GUI 对齐线颜色，如果不喜欢可以将其注释掉采用默认颜色
+" let g:indentLine_color_gui = '#A4E57E'
+
+" -----------------------------------------------------------------------------
+"  < nerdcommenter 插件配置 >
+" -----------------------------------------------------------------------------
+" 我主要用于C/C++代码注释(其它的也行)
+" 以下为插件默认快捷键，其中的说明是以C/C++为例的，其它语言类似
+" <Leader>ci 以每行一个 /* */ 注释选中行(选中区域所在行)，再输入则取消注释
+" <Leader>cm 以一个 /* */ 注释选中行(选中区域所在行)，再输入则称重复注释
+" <Leader>cc 以每行一个 /* */ 注释选中行或区域，再输入则称重复注释
+" <Leader>cu 取消选中区域(行)的注释，选中区域(行)内至少有一个 /* */
+" <Leader>ca 在/*...*/与//这两种注释方式中切换（其它语言可能不一样了）
+" <Leader>cA 行尾注释
+let NERDSpaceDelims = 1                     "在左注释符之后，右注释符之前留有空格
+ 
+" -----------------------------------------------------------------------------
+"  < nerdtree 插件配置 >
+" -----------------------------------------------------------------------------
+" 有目录村结构的文件浏览插件
+ 
+" 常规模式下输入 F2 调用插件
+nmap <F2> :NERDTreeToggle<CR>
+
+" -----------------------------------------------------------------------------
+"  < powerline 插件配置 >
+" -----------------------------------------------------------------------------
+" 状态栏插件，更好的状态栏效果
+"
+" -----------------------------------------------------------------------------
+"  < snipMate 插件配置 >
+" -----------------------------------------------------------------------------
+" 用于各种代码补全，这种补全是一种对代码中的词与代码块的缩写补全，详细用法可以参
+" 考使用说明或网络教程等。不过有时候也会与 supertab 插件在补全时产生冲突，如果大
+" 侠有什么其它解决方法希望不要保留呀
+"
+" -----------------------------------------------------------------------------
+"  < TagList 插件配置 >
+" -----------------------------------------------------------------------------
+" 高效地浏览源码, 其功能就像vc中的workpace
+" 那里面列出了当前文件中的所有宏,全局变量, 函数名等
+ 
+" 常规模式下输入 tl 调用插件，如果有打开 Tagbar 窗口则先将其关闭
+" nmap tl :TagbarClose<CR>:Tlist<CR>
+nmap tl :Tlist<CR>
+ 
+let Tlist_Show_One_File=1                   "只显示当前文件的tags
+" let Tlist_Enable_Fold_Column=0              "使taglist插件不显示左边的折叠行
+let Tlist_Exit_OnlyWindow=1                 "如果Taglist窗口是最后一个窗口则退出Vim
+let Tlist_File_Fold_Auto_Close=1            "自动折叠
+let Tlist_WinWidth=30                       "设置窗口宽度
+let Tlist_Use_Right_Window=1                "在右侧窗口中显示
+
+" airline配置
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#left_sep = ' '
+let g:airline#extensions#tabline#left_alt_sep = '|'
+
+" -----------------------------------------------------------------------------
+"  < vimtweak 工具配置 > 请确保以已装了工具
+" -----------------------------------------------------------------------------
+" 这里只用于窗口透明与置顶
+" 常规模式下 Ctrl + Up（上方向键） 增加不透明度，Ctrl + Down（下方向键） 减少不透明度，<Leader>t 窗口置顶与否切换
+" if (g:iswindows && g:isGUI)
+"     let g:Current_Alpha = 255
+"     let g:Top_Most = 0
+"     func! Alpha_add()
+"         let g:Current_Alpha = g:Current_Alpha + 10
+"         if g:Current_Alpha > 255
+"             let g:Current_Alpha = 255
+"         endif
+"         call libcallnr("vimtweak.dll","SetAlpha",g:Current_Alpha)
+"     endfunc
+"     func! Alpha_sub()
+"         let g:Current_Alpha = g:Current_Alpha - 10
+"         if g:Current_Alpha < 155
+"             let g:Current_Alpha = 155
+"         endif
+"         call libcallnr("vimtweak.dll","SetAlpha",g:Current_Alpha)
+"     endfunc
+"     func! Top_window()
+"         if  g:Top_Most == 0
+"             call libcallnr("vimtweak.dll","EnableTopMost",1)
+"             let g:Top_Most = 1
+"         else
+"             call libcallnr("vimtweak.dll","EnableTopMost",0)
+"             let g:Top_Most = 0
+"         endif
+"     endfunc
+"  
+"     "快捷键设置
+"     nmap <c-up> :call Alpha_add()<CR>
+"     nmap <c-down> :call Alpha_sub()<CR>
+"     nmap <leader>t :call Top_window()<CR>
+" endif
+
+" =============================================================================
+"                          << 以下为常用自动命令配置 >>
+" =============================================================================
+ 
+" 自动切换目录为当前编辑文件所在目录
+au BufRead,BufNewFile,BufEnter * cd %:p:h
+ 
+" =============================================================================
+"                     << windows 下解决 Quickfix 乱码问题 >>
+" =============================================================================
+" windows 默认编码为 cp936，而 Gvim(Vim) 内部编码为 utf-8，所以常常输出为乱码
+" 以下代码可以将编码为 cp936 的输出信息转换为 utf-8 编码，以解决输出乱码问题
+" 但好像只对输出信息全部为中文才有满意的效果，如果输出信息是中英混合的，那可能
+" 不成功，会造成其中一种语言乱码，输出信息全部为英文的好像不会乱码
+" 如果输出信息为乱码的可以试一下下面的代码，如果不行就还是给它注释掉
+ 
+" if g:iswindows
+"     function QfMakeConv()
+"         let qflist = getqflist()
+"         for i in qflist
+"            let i.text = iconv(i.text, "cp936", "utf-8")
+"         endfor
+"         call setqflist(qflist)
+"      endfunction
+"      au QuickfixCmdPost make call QfMakeConv()
+" endif
+ 
+" =============================================================================
+"                          << 其它 >>
+" =============================================================================
+" 注：上面配置中的"<Leader>"在本软件中设置为"\"键（引号里的反斜杠），如<Leader>t
+" 指在常规模式下按"\"键加"t"键，这里不是同时按，而是先按"\"键后按"t"键，间隔在一
+" 秒内，而<Leader>cs是先按"\"键再按"c"又再按"s"键；如要修改"<leader>"键，可以把
+" 下面的设置取消注释，并修改双引号中的键为你想要的，如修改为逗号键。
+ 
+" let mapleader = ","
+
+" php-doc插件配置
+source C:\Users\Administrator\.vim\php-doc.vim
+inoremap <C-P> <ESC>:call PhpDocSingle()<CR>i
+nnoremap <C-P> :call PhpDocSingle()<CR>
+vnoremap <C-P> :call PhpDocRange()<CR> 
